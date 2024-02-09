@@ -4,6 +4,7 @@ import com.jcraft.jsch.ChannelSftp;
 import com.service.audioservice.dao.request.SaveAudioRequest;
 import com.service.audioservice.entities.AudioFile;
 import com.service.audioservice.service.AudioService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,7 +30,7 @@ public class AudioFileController {
     }
 
     @PostMapping("/employee/{id}/audio")
-    public ResponseEntity<AudioFile> save(@PathVariable Long id, @ModelAttribute SaveAudioRequest request,
+    public ResponseEntity<AudioFile> save(@PathVariable Long id, @Valid @ModelAttribute SaveAudioRequest request,
                                           @RequestHeader Long connectionId){
         return ResponseEntity.ok(audioService.saveAudio(id, connectionId, request.getFile()));
     }
