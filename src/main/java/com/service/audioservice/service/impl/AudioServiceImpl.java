@@ -8,6 +8,7 @@ import com.service.audioservice.service.ConnectionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -19,12 +20,30 @@ public class AudioServiceImpl implements AudioService {
 
     @Override
     public List<AudioFile> getAllAudioWithEmployeeId(Long employeeId, Long connectionId) {
+        return audioRepository.getAllByEmployeeId(Long.valueOf(employeeId).intValue());
+    }
+
+    public Vector<ChannelSftp.LsEntry> getAllAudioWithEmployeeIdRaw(Long employeeId, Long connectionId) {
         Vector<ChannelSftp.LsEntry> files = connectionService.getFilesWithName(connectionId, String.valueOf(employeeId));
         List<AudioFile> audioFiles = audioRepository.getAllByEmployeeId(Long.valueOf(employeeId).intValue());
 
         saveAudioIfNotExist(employeeId, files, audioFiles);
 
-        return audioFiles;
+        return files;
+    }
+
+    @Override
+    public AudioFile saveAudio(Long employeeId, Long connectionId, File file) {
+        AudioFile audioFile = AudioFile.builder()
+                .employeeId(Long.valueOf(employeeId).intValue())
+                .fileName(file.getName())
+                .filePath(file.getPath())
+                .metadata("")
+                .build();
+
+        connectionService.saveFile(employeeId, connectionId, file);
+
+        return audioFile;
     }
 
     private void saveAudioIfNotExist(Long employeeId, Vector<ChannelSftp.LsEntry> files, List<AudioFile> audioFiles) {

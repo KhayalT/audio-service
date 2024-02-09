@@ -1,13 +1,15 @@
 package com.service.audioservice.service;
 
-import com.service.audioservice.dao.request.SaveAudioRequest;
-import com.service.audioservice.dao.response.AudioFileResponse;
+import com.jcraft.jsch.ChannelSftp;
 import com.service.audioservice.entities.AudioFile;
-import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.util.List;
+import java.util.Vector;
 
 public interface AudioService {
     List<AudioFile> getAllAudioWithEmployeeId(Long employeeId, Long connectionId);
+    Vector<ChannelSftp.LsEntry> getAllAudioWithEmployeeIdRaw(Long employeeId, Long connectionId);
+    AudioFile saveAudio(Long employeeId, Long connectionId, File file);
 
 }

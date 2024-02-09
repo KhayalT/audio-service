@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
+import java.io.File;
 import java.util.Vector;
 
 @RequiredArgsConstructor
@@ -21,8 +22,15 @@ public class SftpConnectionServiceImpl implements ConnectionService {
         SftpConnection connection = sftpConnectionRepository.getReferenceById(connectionId);
         Session session = getSession(connection);
         ChannelSftp channel = getChannel(session);
-        Vector<ChannelSftp.LsEntry> files = getFilesNamesFromSFTP(channel, connection.getBaseDirectory(), fileName);
-        return files;
+        return getFilesNamesFromSFTP(channel, connection.getBaseDirectory(), fileName);
+    }
+
+    @Override
+    public void saveFile(Long employeeId, Long connectionId, File file) {
+        SftpConnection connection = sftpConnectionRepository.getReferenceById(connectionId);
+        Session session = getSession(connection);
+        ChannelSftp channel = getChannel(session);
+        putFileToSFTP(channel, connection.getBaseDirectory(), String.valueOf(employeeId), file);
     }
 
     @SneakyThrows
@@ -69,5 +77,16 @@ public class SftpConnectionServiceImpl implements ConnectionService {
             }
         }
         return files;
+    }
+
+    @SneakyThrows
+    private void putFileToSFTP(ChannelSftp channelSftp, String remoteDirectory, String filePrefixAndExtension, File file){
+        if(channelSftp != null && channelSftp.isConnected()){
+            try {
+                channelSftp.put(file.getAbsolutePath(), remoteDirectory + '/' + filePrefixAndExtension + file.getName());
+            } catch (SftpException e) {
+                throw new Exception(e.getMessage());
+            }
+        }
     }
 }

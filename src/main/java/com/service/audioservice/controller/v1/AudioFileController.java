@@ -1,7 +1,7 @@
 package com.service.audioservice.controller.v1;
 
-import com.service.audioservice.dao.request.GetAudioRequest;
-import com.service.audioservice.dao.response.AudioFileResponse;
+import com.jcraft.jsch.ChannelSftp;
+import com.service.audioservice.dao.request.SaveAudioRequest;
 import com.service.audioservice.entities.AudioFile;
 import com.service.audioservice.service.AudioService;
 import lombok.RequiredArgsConstructor;
@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Vector;
 
 @RestController
 @RequestMapping("api/v1")
@@ -17,8 +18,19 @@ public class AudioFileController {
 
     private final AudioService audioService;
 
+    @GetMapping("/employee/{id}/audio")
+    public ResponseEntity<List<AudioFile>> list(@PathVariable Long id, @RequestHeader Long connectionId){
+        return ResponseEntity.ok(audioService.getAllAudioWithEmployeeId(id, connectionId));
+    }
+
+    @GetMapping("/employee/{id}/audio-raw")
+    public ResponseEntity<Vector<ChannelSftp.LsEntry>> listRaw(@PathVariable Long id, @RequestHeader Long connectionId){
+        return ResponseEntity.ok(audioService.getAllAudioWithEmployeeIdRaw(id, connectionId));
+    }
+
     @PostMapping("/employee/{id}/audio")
-    public ResponseEntity<List<AudioFile>> index(@PathVariable Long id, @RequestBody GetAudioRequest request){
-        return ResponseEntity.ok(audioService.getAllAudioWithEmployeeId(id, request.getConnectionId()));
+    public ResponseEntity<AudioFile> save(@PathVariable Long id, @ModelAttribute SaveAudioRequest request,
+                                          @RequestHeader Long connectionId){
+        return ResponseEntity.ok(audioService.saveAudio(id, connectionId, request.getFile()));
     }
 }
