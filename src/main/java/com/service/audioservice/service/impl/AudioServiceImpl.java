@@ -6,9 +6,12 @@ import com.service.audioservice.repository.AudioRepository;
 import com.service.audioservice.service.AudioService;
 import com.service.audioservice.service.ConnectionService;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -32,14 +35,18 @@ public class AudioServiceImpl implements AudioService {
         return files;
     }
 
+    @SneakyThrows
     @Override
-    public AudioFile saveAudio(Long employeeId, Long connectionId, File file) {
+    public AudioFile saveAudio(Long employeeId, Long connectionId, MultipartFile file) {
         AudioFile audioFile = AudioFile.builder()
                 .employeeId(Long.valueOf(employeeId).intValue())
-                .fileName(file.getName())
-                .filePath(file.getPath())
+                .fileName(file.getOriginalFilename())
+                .filePath("")
+                .content(file.getResource().getContentAsByteArray())
                 .metadata("")
                 .build();
+
+        audioRepository.save(audioFile);
 
         connectionService.saveFile(employeeId, connectionId, file);
 

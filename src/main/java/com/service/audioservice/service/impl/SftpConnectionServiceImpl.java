@@ -7,8 +7,10 @@ import com.service.audioservice.service.ConnectionService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.util.Vector;
 
 @RequiredArgsConstructor
@@ -26,7 +28,7 @@ public class SftpConnectionServiceImpl implements ConnectionService {
     }
 
     @Override
-    public void saveFile(Long employeeId, Long connectionId, File file) {
+    public void saveFile(Long employeeId, Long connectionId, MultipartFile file) {
         SftpConnection connection = sftpConnectionRepository.getReferenceById(connectionId);
         Session session = getSession(connection);
         ChannelSftp channel = getChannel(session);
@@ -80,13 +82,31 @@ public class SftpConnectionServiceImpl implements ConnectionService {
     }
 
     @SneakyThrows
-    private void putFileToSFTP(ChannelSftp channelSftp, String remoteDirectory, String filePrefixAndExtension, File file){
+    private void putFileToSFTP(ChannelSftp channelSftp, String remoteDirectory, String filePrefixAndExtension, MultipartFile file){
         if(channelSftp != null && channelSftp.isConnected()){
             try {
-                channelSftp.put(file.getAbsolutePath(), remoteDirectory + '/' + filePrefixAndExtension + file.getName());
+                channelSftp.cd(remoteDirectory);
+
+                if (!directoryExists(channelSftp, remoteDirectory + '/' + filePrefixAndExtension)){
+                    channelSftp.mkdir(filePrefixAndExtension);
+                }
+
+                File tempFile = File.createTempFile(remoteDirectory, "." + file.getOriginalFilename());
+                file.transferTo(tempFile);
+
+                channelSftp.put(new FileInputStream(tempFile), remoteDirectory + '/' + filePrefixAndExtension + '/' + file.getOriginalFilename());
             } catch (SftpException e) {
                 throw new Exception(e.getMessage());
             }
+        }
+    }
+
+    private boolean directoryExists(ChannelSftp channelSftp, String directory) {
+        try {
+            SftpATTRS attrs = channelSftp.stat(directory);
+            return attrs.isDir();
+        } catch (SftpException e) {
+            return false;
         }
     }
 }

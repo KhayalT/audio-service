@@ -32,4 +32,6 @@ public class AudioFile {
     private String filePath;
 
     private String metadata;
+
+    private byte[] content;
 }
